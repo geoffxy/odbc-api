@@ -619,8 +619,9 @@ unsafe fn bind_row_set_buffer_to_statement(
     row_set_buffer: &mut impl RowSetBuffer,
 ) -> Result<(), Error> {
     unsafe {
-        stmt.set_row_bind_type(row_set_buffer.bind_type())
-            .into_result(&stmt)?;
+        // NOTE: We are ignoring any errors.
+        let _ = stmt.set_row_bind_type(row_set_buffer.bind_type())
+            .into_result(&stmt);
         let size = row_set_buffer.row_array_size();
         let sql_result = stmt.set_row_array_size(size);
 
