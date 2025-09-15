@@ -31,6 +31,7 @@ mod columnar;
 mod description;
 mod indicator;
 mod item;
+mod padded;
 mod row_vec;
 mod text_column;
 
@@ -42,6 +43,7 @@ pub use self::{
     description::BufferDesc,
     indicator::Indicator,
     item::Item,
+    padded::DatePadded,
     row_vec::{FetchRow, FetchRowMember, RowVec},
     text_column::{
         CharColumn, TextColumn, TextColumnIt, TextColumnSliceMut, TextColumnView, WCharColumn,

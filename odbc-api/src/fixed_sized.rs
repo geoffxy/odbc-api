@@ -1,5 +1,5 @@
 use crate::{
-    buffers::{FetchRowMember, Indicator},
+    buffers::{DatePadded, FetchRowMember, Indicator},
     handles::{CData, CDataMut, DataType, HasDataType},
     parameter::{CElement, OutputParameter},
 };
@@ -105,6 +105,7 @@ macro_rules! impl_pod {
 impl_pod!(f64, CDataType::Double);
 impl_pod!(f32, CDataType::Float);
 impl_pod!(Date, CDataType::TypeDate);
+impl_pod!(DatePadded, CDataType::TypeDate);
 impl_pod!(Timestamp, CDataType::TypeTimestamp);
 impl_pod!(Time, CDataType::TypeTime);
 impl_pod!(Numeric, CDataType::Numeric);
