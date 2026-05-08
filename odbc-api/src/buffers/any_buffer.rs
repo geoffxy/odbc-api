@@ -144,7 +144,11 @@ impl AnyBuffer {
                 AnyBuffer::NullableTime(OptTimeColumn::new(max_rows))
             }
             BufferDesc::Timestamp { nullable: true } => {
-                AnyBuffer::NullableTimestamp(OptTimestampColumn::new(max_rows))
+                if std::env::var(USE_PADDING_VAR).is_ok() {
+                    AnyBuffer::NullableTimestampPadded(OptTimestampPaddedColumn::new(max_rows))
+                } else {
+                    AnyBuffer::NullableTimestamp(OptTimestampColumn::new(max_rows))
+                }
             }
             BufferDesc::F64 { nullable: true } => {
                 AnyBuffer::NullableF64(OptF64Column::new(max_rows))
