@@ -22,7 +22,5 @@ pub struct TimestampPadded {
     pub hour: USmallInt,
     pub minute: USmallInt,
     pub second: USmallInt,
-    _padding1: [u8; 2], // 2 bytes
     pub fraction: UInteger,
-    _padding2: [u8; 2], // 2 bytes
 }
