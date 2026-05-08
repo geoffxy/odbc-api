@@ -1,5 +1,5 @@
 use crate::{
-    buffers::{DatePadded, Resize},
+    buffers::{DatePadded, Resize, TimestampPadded},
     fixed_sized::{Bit, Pod},
     handles::{CData, CDataMut},
 };
@@ -15,6 +15,7 @@ pub type OptF32Column = ColumnWithIndicator<f32>;
 pub type OptDateColumn = ColumnWithIndicator<Date>;
 pub type OptDatePaddedColumn = ColumnWithIndicator<DatePadded>;
 pub type OptTimestampColumn = ColumnWithIndicator<Timestamp>;
+pub type OptTimestampPaddedColumn = ColumnWithIndicator<TimestampPadded>;
 pub type OptTimeColumn = ColumnWithIndicator<Time>;
 pub type OptI8Column = ColumnWithIndicator<i8>;
 pub type OptI16Column = ColumnWithIndicator<i16>;

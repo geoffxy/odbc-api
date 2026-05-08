@@ -4,7 +4,10 @@ use odbc_sys::{CDataType, Date, Time, Timestamp};
 
 use crate::{
     Bit, DataType, Error,
-    buffers::{DatePadded, columnar::Resize},
+    buffers::{
+        DatePadded, TimestampPadded, column_with_indicator::OptTimestampPaddedColumn,
+        columnar::Resize,
+    },
     columnar_bulk_inserter::BoundInputSlice,
     error::TooLargeBufferSize,
     handles::{CData, CDataMut, HasDataType, StatementRef},
@@ -44,6 +47,7 @@ pub enum AnyBuffer {
     DatePadded(Vec<DatePadded>),
     Time(Vec<Time>),
     Timestamp(Vec<Timestamp>),
+    TimestampPadded(Vec<TimestampPadded>),
     F64(Vec<f64>),
     F32(Vec<f32>),
     I8(Vec<i8>),
@@ -56,6 +60,7 @@ pub enum AnyBuffer {
     NullableDatePadded(OptDatePaddedColumn),
     NullableTime(OptTimeColumn),
     NullableTimestamp(OptTimestampColumn),
+    NullableTimestampPadded(OptTimestampPaddedColumn),
     NullableF64(OptF64Column),
     NullableF32(OptF32Column),
     NullableI8(OptI8Column),
@@ -183,6 +188,7 @@ impl AnyBuffer {
             AnyBuffer::DatePadded(col) => col,
             AnyBuffer::Time(col) => col,
             AnyBuffer::Timestamp(col) => col,
+            AnyBuffer::TimestampPadded(col) => col,
             AnyBuffer::I8(col) => col,
             AnyBuffer::I16(col) => col,
             AnyBuffer::I32(col) => col,
@@ -195,6 +201,7 @@ impl AnyBuffer {
             AnyBuffer::NullableDatePadded(col) => col,
             AnyBuffer::NullableTime(col) => col,
             AnyBuffer::NullableTimestamp(col) => col,
+            AnyBuffer::NullableTimestampPadded(col) => col,
             AnyBuffer::NullableI8(col) => col,
             AnyBuffer::NullableI16(col) => col,
             AnyBuffer::NullableI32(col) => col,
@@ -215,6 +222,7 @@ impl AnyBuffer {
             AnyBuffer::DatePadded(col) => col,
             AnyBuffer::Time(col) => col,
             AnyBuffer::Timestamp(col) => col,
+            AnyBuffer::TimestampPadded(col) => col,
             AnyBuffer::I8(col) => col,
             AnyBuffer::I16(col) => col,
             AnyBuffer::I32(col) => col,
@@ -227,6 +235,7 @@ impl AnyBuffer {
             AnyBuffer::NullableDatePadded(col) => col,
             AnyBuffer::NullableTime(col) => col,
             AnyBuffer::NullableTimestamp(col) => col,
+            AnyBuffer::NullableTimestampPadded(col) => col,
             AnyBuffer::NullableI8(col) => col,
             AnyBuffer::NullableI16(col) => col,
             AnyBuffer::NullableI32(col) => col,
@@ -285,7 +294,10 @@ impl HasDataType for AnyBuffer {
             AnyBuffer::Time(_) | AnyBuffer::NullableTime(_) => DataType::Time {
                 precision: DEFAULT_TIME_PRECISION,
             },
-            AnyBuffer::Timestamp(_) | AnyBuffer::NullableTimestamp(_) => DataType::Timestamp {
+            AnyBuffer::Timestamp(_)
+            | AnyBuffer::NullableTimestamp(_)
+            | AnyBuffer::TimestampPadded(_)
+            | AnyBuffer::NullableTimestampPadded(_) => DataType::Timestamp {
                 precision: DEFAULT_TIME_PRECISION,
             },
             AnyBuffer::F64(_) | AnyBuffer::NullableF64(_) => DataType::Double,
@@ -386,6 +398,7 @@ pub enum AnySlice<'a> {
     DatePadded(&'a [DatePadded]),
     Time(&'a [Time]),
     Timestamp(&'a [Timestamp]),
+    TimestampPadded(&'a [TimestampPadded]),
     F64(&'a [f64]),
     F32(&'a [f32]),
     I8(&'a [i8]),
@@ -398,6 +411,7 @@ pub enum AnySlice<'a> {
     NullableDatePadded(NullableSlice<'a, DatePadded>),
     NullableTime(NullableSlice<'a, Time>),
     NullableTimestamp(NullableSlice<'a, Timestamp>),
+    NullableTimestampPadded(NullableSlice<'a, TimestampPadded>),
     NullableF64(NullableSlice<'a, f64>),
     NullableF32(NullableSlice<'a, f32>),
     NullableI8(NullableSlice<'a, i8>),
@@ -474,6 +488,7 @@ unsafe impl<'a> BoundInputSlice<'a> for AnyBuffer {
                 AnyBuffer::DatePadded(column) => AnySliceMut::DatePadded(column),
                 AnyBuffer::Time(column) => AnySliceMut::Time(column),
                 AnyBuffer::Timestamp(column) => AnySliceMut::Timestamp(column),
+                AnyBuffer::TimestampPadded(column) => AnySliceMut::TimestampPadded(column),
                 AnyBuffer::F64(column) => AnySliceMut::F64(column),
                 AnyBuffer::F32(column) => AnySliceMut::F32(column),
                 AnyBuffer::I8(column) => AnySliceMut::I8(column),
@@ -493,6 +508,9 @@ unsafe impl<'a> BoundInputSlice<'a> for AnyBuffer {
                 }
                 AnyBuffer::NullableTimestamp(column) => {
                     AnySliceMut::NullableTimestamp(column.writer_n(num_rows))
+                }
+                AnyBuffer::NullableTimestampPadded(column) => {
+                    AnySliceMut::NullableTimestampPadded(column.writer_n(num_rows))
                 }
                 AnyBuffer::NullableF64(column) => {
                     AnySliceMut::NullableF64(column.writer_n(num_rows))
@@ -530,6 +548,7 @@ pub enum AnySliceMut<'a> {
     DatePadded(&'a mut [DatePadded]),
     Time(&'a mut [Time]),
     Timestamp(&'a mut [Timestamp]),
+    TimestampPadded(&'a mut [TimestampPadded]),
     F64(&'a mut [f64]),
     F32(&'a mut [f32]),
     I8(&'a mut [i8]),
@@ -542,6 +561,7 @@ pub enum AnySliceMut<'a> {
     NullableDatePadded(NullableSliceMut<'a, DatePadded>),
     NullableTime(NullableSliceMut<'a, Time>),
     NullableTimestamp(NullableSliceMut<'a, Timestamp>),
+    NullableTimestampPadded(NullableSliceMut<'a, TimestampPadded>),
     NullableF64(NullableSliceMut<'a, f64>),
     NullableF32(NullableSliceMut<'a, f32>),
     NullableI8(NullableSliceMut<'a, i8>),
@@ -606,6 +626,7 @@ unsafe impl ColumnBuffer for AnyBuffer {
             AnyBuffer::DatePadded(col) => col.capacity(),
             AnyBuffer::Time(col) => col.capacity(),
             AnyBuffer::Timestamp(col) => col.capacity(),
+            AnyBuffer::TimestampPadded(col) => col.capacity(),
             AnyBuffer::F64(col) => col.capacity(),
             AnyBuffer::F32(col) => col.capacity(),
             AnyBuffer::I8(col) => col.capacity(),
@@ -618,6 +639,7 @@ unsafe impl ColumnBuffer for AnyBuffer {
             AnyBuffer::NullableDatePadded(col) => col.capacity(),
             AnyBuffer::NullableTime(col) => col.capacity(),
             AnyBuffer::NullableTimestamp(col) => col.capacity(),
+            AnyBuffer::NullableTimestampPadded(col) => col.capacity(),
             AnyBuffer::NullableF64(col) => col.capacity(),
             AnyBuffer::NullableF32(col) => col.capacity(),
             AnyBuffer::NullableI8(col) => col.capacity(),
@@ -638,6 +660,7 @@ unsafe impl ColumnBuffer for AnyBuffer {
             AnyBuffer::DatePadded(col) => AnySlice::DatePadded(&col[0..valid_rows]),
             AnyBuffer::Time(col) => AnySlice::Time(&col[0..valid_rows]),
             AnyBuffer::Timestamp(col) => AnySlice::Timestamp(&col[0..valid_rows]),
+            AnyBuffer::TimestampPadded(col) => AnySlice::TimestampPadded(&col[0..valid_rows]),
             AnyBuffer::F64(col) => AnySlice::F64(&col[0..valid_rows]),
             AnyBuffer::F32(col) => AnySlice::F32(&col[0..valid_rows]),
             AnyBuffer::I8(col) => AnySlice::I8(&col[0..valid_rows]),
@@ -652,6 +675,9 @@ unsafe impl ColumnBuffer for AnyBuffer {
             }
             AnyBuffer::NullableTime(col) => AnySlice::NullableTime(col.iter(valid_rows)),
             AnyBuffer::NullableTimestamp(col) => AnySlice::NullableTimestamp(col.iter(valid_rows)),
+            AnyBuffer::NullableTimestampPadded(col) => {
+                AnySlice::NullableTimestampPadded(col.iter(valid_rows))
+            }
             AnyBuffer::NullableF64(col) => AnySlice::NullableF64(col.iter(valid_rows)),
             AnyBuffer::NullableF32(col) => AnySlice::NullableF32(col.iter(valid_rows)),
             AnyBuffer::NullableI8(col) => AnySlice::NullableI8(col.iter(valid_rows)),
@@ -673,6 +699,7 @@ unsafe impl ColumnBuffer for AnyBuffer {
             AnyBuffer::DatePadded(col) => Self::fill_default_slice(&mut col[from..to]),
             AnyBuffer::Time(col) => Self::fill_default_slice(&mut col[from..to]),
             AnyBuffer::Timestamp(col) => Self::fill_default_slice(&mut col[from..to]),
+            AnyBuffer::TimestampPadded(col) => Self::fill_default_slice(&mut col[from..to]),
             AnyBuffer::F64(col) => Self::fill_default_slice(&mut col[from..to]),
             AnyBuffer::F32(col) => Self::fill_default_slice(&mut col[from..to]),
             AnyBuffer::I8(col) => Self::fill_default_slice(&mut col[from..to]),
@@ -685,6 +712,7 @@ unsafe impl ColumnBuffer for AnyBuffer {
             AnyBuffer::NullableDatePadded(col) => col.fill_null(from, to),
             AnyBuffer::NullableTime(col) => col.fill_null(from, to),
             AnyBuffer::NullableTimestamp(col) => col.fill_null(from, to),
+            AnyBuffer::NullableTimestampPadded(col) => col.fill_null(from, to),
             AnyBuffer::NullableF64(col) => col.fill_null(from, to),
             AnyBuffer::NullableF32(col) => col.fill_null(from, to),
             AnyBuffer::NullableI8(col) => col.fill_null(from, to),
