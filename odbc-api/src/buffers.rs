@@ -43,7 +43,7 @@ pub use self::{
     description::BufferDesc,
     indicator::Indicator,
     item::Item,
-    padded::{DatePadded, TimestampPadded},
+    padded::DatePadded,
     row_vec::{FetchRow, FetchRowMember, RowVec},
     text_column::{
         CharColumn, TextColumn, TextColumnIt, TextColumnSliceMut, TextColumnView, WCharColumn,

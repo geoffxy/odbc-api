@@ -1,10 +1,7 @@
 use odbc_sys::{Date, Time, Timestamp};
 
 use super::{AnySlice, AnySliceMut, BufferDesc, NullableSlice, NullableSliceMut};
-use crate::{
-    Bit,
-    buffers::{DatePadded, TimestampPadded},
-};
+use crate::{Bit, buffers::DatePadded};
 
 /// Can either be extracted as a slice or a [`NullableSlice`] from an [`AnySlice`]. This allows
 /// the user to avoid matching on all possibile variants of an [`AnySlice`] in case the
@@ -146,40 +143,6 @@ impl Item for DatePadded {
     fn as_nullable_slice_mut(variant: AnySliceMut<'_>) -> Option<NullableSliceMut<'_, Self>> {
         match variant {
             AnySliceMut::NullableDatePadded(vals) => Some(vals),
-            _ => None,
-        }
-    }
-}
-
-impl Item for TimestampPadded {
-    fn buffer_desc(nullable: bool) -> BufferDesc {
-        BufferDesc::Timestamp { nullable }
-    }
-
-    fn as_slice(variant: AnySlice<'_>) -> Option<&[Self]> {
-        match variant {
-            AnySlice::TimestampPadded(vals) => Some(vals),
-            _ => None,
-        }
-    }
-
-    fn as_nullable_slice(variant: AnySlice<'_>) -> Option<NullableSlice<'_, Self>> {
-        match variant {
-            AnySlice::NullableTimestampPadded(vals) => Some(vals),
-            _ => None,
-        }
-    }
-
-    fn as_slice_mut(variant: AnySliceMut<'_>) -> Option<&'_ mut [Self]> {
-        match variant {
-            AnySliceMut::TimestampPadded(vals) => Some(vals),
-            _ => None,
-        }
-    }
-
-    fn as_nullable_slice_mut(variant: AnySliceMut<'_>) -> Option<NullableSliceMut<'_, Self>> {
-        match variant {
-            AnySliceMut::NullableTimestampPadded(vals) => Some(vals),
             _ => None,
         }
     }
